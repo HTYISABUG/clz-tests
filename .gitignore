@@ -3,5 +3,9 @@ byte
 harley
 iteration
 recursive
+format
 *.o
 .*.d
+*.perf
+*.png
+*.txt

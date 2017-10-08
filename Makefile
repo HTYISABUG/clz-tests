@@ -14,6 +14,8 @@ EXEC = \
 	recursive \
 	harley
 
+RANGE ?= 67100000 67116384
+
 deps := $(EXEC:%=.%.o.d)
 
 GIT_HOOKS := .git/hooks/pre-commit
@@ -31,9 +33,19 @@ SRCS_common = main.c
 		-MMD -MF .$@.d \
 		-D$(shell echo $(subst .o,,$@)) $(SRCS_common)
 
+format: format.c
+	$(CC) $(CFLAGS_common) -o $@ $@.c
+
+branch-test: $(EXEC) format
+	for method in $(EXEC); do \
+		./branch-test.sh $$method $(RANGE) && \
+		./format $$method $(RANGE) && \
+		rm .tmp/*; \
+	done
+
 run: $(EXEC)
-	for method in $(EXEC); do\
-		taskset -c 1 ./$$method 67100000 67116384; \
+	for method in $(EXEC); do \
+		taskset -c 1 ./$$method $(RANGE); \
 	done
 
 plot: iteration.txt iteration.txt binary.txt byte.txt harley.txt
@@ -41,6 +53,6 @@ plot: iteration.txt iteration.txt binary.txt byte.txt harley.txt
 
 .PHONY: clean
 clean:
-	$(RM) $(EXEC) *.o $(deps) *.txt *.png
+	$(RM) $(EXEC) *.o $(deps) *.txt *.png *.perf format .tmp/* perf/*.perf perf/*.png
 
 -include $(deps)
